@@ -1,11 +1,9 @@
 import streamlit as st
-import os
 
 # ==========================================
-# 1. DFA LOGIC (Strictly matching your 19-state diagram)
+# 1. DFA LOGIC 
 # ==========================================
 def get_next_state(state, char):
-    """Transition function representing the DFA table."""
     if char == 'M': return 1
     if char == 'D': return 6
     if char == 'P': return 9
@@ -36,10 +34,8 @@ def get_next_state(state, char):
     return 0
 
 def run_dfa(text):
-    """Processes text character by character."""
     accept_states = {2, 3, 4, 5, 7, 8, 12, 13, 18}
-    state = 0
-    current_start = -1
+    state, current_start = 0, -1
     matches = []
 
     for i, char in enumerate(text):
@@ -58,200 +54,117 @@ def run_dfa(text):
                     matches.append(match_obj)
     return matches
 
-
 # ==========================================
-# 2. STREAMLIT WEB INTERFACE (USM Theme)
+# 2. STREAMLIT WEB INTERFACE
 # ==========================================
-
 def main():
-    st.set_page_config(
-        page_title="CPT411 - L3 People Finder",
-        page_icon="🔎",
-        layout="wide"
-    )
+    st.set_page_config(page_title="CPT411 - L3 People Finder", page_icon="🔎", layout="centered")
 
-    # --- STYLE ---
+    # --- COMPACT STYLE SETTINGS ---
     st.markdown("""
     <style>
-        .title {
-            text-align: center;
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #b892ff; /* Lighter purple for dark mode readability */
-            margin-bottom: 0px;
-            padding-bottom: 0px;
-        }
-        .subtitle {
-            text-align: center;
-            font-size: 1.1rem;
-            color: #a0a0a0;
-            margin-bottom: 30px;
-            font-weight: 500;
-        }
-        .highlight-box {
-            border: 1px solid #4f2b7b; 
+        .block-container { padding-top: 2rem; padding-bottom: 2rem; }
+        .title { text-align: center; font-size: 2rem; font-weight: 800; color: #b892ff; margin-bottom: 0; }
+        .subtitle { text-align: center; font-size: 1rem; color: #a0a0a0; margin-bottom: 15px; }
+        
+        /* ADAPTIVE BOX: Fixed shadow to show on all 4 sides */
+        .highlight-box { 
+            border: 1px solid rgba(128, 128, 128, 0.2); /* Subtle universal border */
             border-radius: 8px; 
-            padding: 16px; 
-            background-color: #1e1e2f;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            padding: 15px; 
+            background-color: var(--secondary-background-color); /* Auto-switches to white/light-gray in light mode */
+            color: var(--text-color); /* Ensures text is always readable */
+            box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.15); /* 0px offset creates an even shadow on ALL sides */
         }
+        
+        table { width: 100%; } 
+        th { text-align: left !important; }
     </style>
     """, unsafe_allow_html=True)
 
     # --- SIDEBAR ---
     with st.sidebar:
         st.markdown("### 🎓 CPT411 Project")
-        st.info("**L3: People Finder**\n\nThis system uses a 19-state Deterministic Finite Automaton (DFA) to recognize specific naming patterns character-by-character.")
-        
-        st.markdown("### 🎯 Target Patterns")
-        st.markdown("""
-        * Mr, Mr.
-        * Mrs, Mrs.
-        * Dr, Dr.
-        * Prof, Prof.
-        * Nicol
-        """)
-        st.divider()
-        st.caption("Universiti Sains Malaysia")
+        st.info("**L3: People Finder**\n\n19-state DFA pattern recognition.")
+        st.markdown("### 🎯 Target Patterns\n* Mr, Mr.\n* Mrs, Mrs.\n* Dr, Dr.\n* Prof, Prof.\n* Nicol")
 
-    # --- MAIN TITLE ---
+    # --- HEADER ---
     st.markdown('<div class="title">🔎 DFA Recognizer: People Finder</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">Character-by-Character Pattern Recognition System</div>', unsafe_allow_html=True)
 
-    # --- SESSION STATE INITIALIZATION ---
-    if "uploader_key" not in st.session_state:
-        st.session_state.uploader_key = 0
-    if "input_text" not in st.session_state:
-        st.session_state.input_text = ""
-    if "last_uploaded" not in st.session_state:
-        st.session_state.last_uploaded = None
+    # --- SESSION STATE ---
+    if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
+    if "input_text" not in st.session_state: st.session_state.input_text = ""
+    if "last_uploaded" not in st.session_state: st.session_state.last_uploaded = None
 
-    # --- CALLBACK FUNCTION TO CLEAR INPUTS ---
     def clear_all_inputs():
-        """This runs BEFORE the page redraws, avoiding the instantiation error."""
         st.session_state.input_text = ""
         st.session_state.uploader_key += 1
         st.session_state.last_uploaded = None
 
-    # --- INPUT SECTION ---
-    st.markdown("#### 📝 1. Provide Text to Scan")
-
-    uploaded_file = st.file_uploader(
-        "Upload a .txt file (Optional)", 
-        type=["txt"], 
-        key=f"uploader_{st.session_state.uploader_key}"
-    )
-
-    if uploaded_file is not None:
+    # --- INPUT ---
+    uploaded_file = st.file_uploader("Upload .txt file (Optional)", type=["txt"], key=f"uploader_{st.session_state.uploader_key}")
+    if uploaded_file:
         file_content = uploaded_file.getvalue().decode("utf-8")
         if st.session_state.last_uploaded != file_content:
             st.session_state.input_text = file_content
             st.session_state.last_uploaded = file_content
 
-    # The text area is tied to the session state variable
-    text = st.text_area(
-        "Text Input",
-        key="input_text",
-        height=180,
-        label_visibility="collapsed",
-        placeholder="Type your text here or upload a .txt file above..."
-    )
+    text = st.text_area("Text Input", key="input_text", height=150, label_visibility="collapsed", placeholder="Type your text here...")
 
-    # --- BUTTONS (One Line, Equal Size) ---
-    st.write("") # Little bit of spacing
+    # --- BUTTONS ---
     col1, col2, col3 = st.columns(3)
+    run_btn = col1.button("🚀 Run DFA Scanner", type="primary", use_container_width=True)
+    col2.button("🧹 Clear Results", use_container_width=True)
+    col3.button("🗑 Clear Input", use_container_width=True, on_click=clear_all_inputs)
 
-    with col1:
-        # type="primary" makes the button stand out with a solid background color!
-        run_btn = st.button("🚀 Run DFA Scanner", type="primary", use_container_width=True)
-
-    with col2:
-        clear_res_btn = st.button("🧹 Clear Results", use_container_width=True)
-
-    with col3:
-        st.button("🗑 Clear Input", use_container_width=True, on_click=clear_all_inputs)
-
-    st.divider()
-
-    # --- PROCESS & RESULTS ---
+    # --- RESULTS ---
     if run_btn:
         current_text = st.session_state.input_text.strip()
-
         if not current_text:
-            st.warning("⚠️ Please enter or upload text before running the machine.")
+            st.warning("⚠️ Please enter text.")
             return
 
         matches = run_dfa(current_text)
 
-        st.markdown("#### 📊 2. Scan Results")
-
-        # STATUS BANNER
         if matches:
-            st.success(f"✅ **STATUS: ACCEPT** — The machine found **{len(matches)}** pattern(s) in the text.")
-        else:
-            st.error("❌ **STATUS: REJECT** — No target patterns were found in the text.")
-
-        if matches:
-            # Count occurrences of each pattern
+            st.success(f"✅ **ACCEPT:** Found **{len(matches)}** pattern(s).")
             pattern_counts = {}
-            for m in matches:
-                pat = m['pattern']
-                pattern_counts[pat] = pattern_counts.get(pat, 0) + 1
+            for m in matches: pattern_counts[m['pattern']] = pattern_counts.get(m['pattern'], 0) + 1
 
-            # --- TABS ---
-            tab1, tab2, tab3 = st.tabs([
-                "📈 Dashboard Summary",
-                "🔢 Pattern Occurrences",
-                "📍 Exact Positions",
-            ])
+            # --- COMPACT DATA DASHBOARD ---
+            m_col1, m_col2, m_col3 = st.columns(3)
+            m_col1.metric("Total Patterns", len(matches))
+            m_col2.metric("Unique Titles", len(pattern_counts))
+            m_col3.metric("Characters Scanned", len(current_text))
+            
+            st.markdown("---") # Thin divider
 
-            # -------- TAB 1: SUMMARY (Using Metrics) --------
-            with tab1:
-                st.write("<br>", unsafe_allow_html=True)
-                m_col1, m_col2, m_col3 = st.columns(3)
-                m_col1.metric(label="Total Patterns Found", value=len(matches))
-                m_col2.metric(label="Unique Titles/Names", value=len(pattern_counts))
-                m_col3.metric(label="Total Characters Scanned", value=len(current_text))
-                st.write("<br>", unsafe_allow_html=True)
-
-            # -------- TAB 2: OCCURRENCES (Using a Table) --------
-            with tab2:
-                st.write("<br>", unsafe_allow_html=True)
-                table_md = "| Pattern Found | Total Occurrences |\n|---|---|\n"
-                for pat, count in sorted(pattern_counts.items(), key=lambda x: x[1], reverse=True):
-                    table_md += f"| **{pat}** | {count} |\n"
+            t_col1, t_col2 = st.columns([1, 1.2]) 
+            with t_col1:
+                st.markdown("##### 🔢 Pattern Occurrences")
+                table_md = "| Pattern | Occurrences |\n|---|---|\n"
+                for pat, count in sorted(pattern_counts.items(), key=lambda x: x[1], reverse=True): table_md += f"| **{pat}** | {count} |\n"
                 st.markdown(table_md)
 
-            # -------- TAB 3: POSITIONS (Using a Table) --------
-            with tab3:
-                st.write("<br>", unsafe_allow_html=True)
-                pos_md = "| # | Matched Pattern | Start Index | End Index |\n|---|---|---|---|\n"
-                for idx, m in enumerate(matches, 1):
-                    pos_md += f"| {idx} | **{m['pattern']}** | {m['start']} | {m['end']} |\n"
+            with t_col2:
+                st.markdown("##### 📍 Exact Positions")
+                pos_md = "| # | Pattern | Start | End |\n|---|---|---|---|\n"
+                for idx, m in enumerate(matches, 1): pos_md += f"| {idx} | **{m['pattern']}** | {m['start']} | {m['end']} |\n"
                 st.markdown(pos_md)
 
-            # --- HIGHLIGHTED TEXT ---
-            st.write("<br>", unsafe_allow_html=True)
-            st.markdown("#### ✨ 3. Visualized Output")
-            
-            highlighted = ""
-            last = 0
-
+            # --- VISUALIZATION ---
+            st.markdown("##### ✨ Visualized Output")
+            highlighted, last = "", 0
             for m in matches:
                 highlighted += current_text[last:m['start']]
-                highlighted += f"<mark style='background-color:#ffcb05; color:#000000; font-weight:bold; padding:2px 4px; border-radius:4px; box-shadow: 0px 2px 4px rgba(0,0,0,0.2);'>{current_text[m['start']:m['end']+1]}</mark>"
+                highlighted += f"<mark style='background-color:#ffcb05; color:#000; font-weight:bold; padding:2px 4px; border-radius:4px;'>{current_text[m['start']:m['end']+1]}</mark>"
                 last = m['end'] + 1
-
             highlighted += current_text[last:]
 
-            st.markdown(f"""
-            <div class="highlight-box">
-                <p style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.8; color: #e0e0e0; margin: 0; white-space: pre-wrap; word-wrap: break-word;">
-                    {highlighted}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="highlight-box"><p style="margin:0; line-height: 1.8; white-space:pre-wrap;">{highlighted}</p></div>', unsafe_allow_html=True)
+        else:
+            st.error("❌ **REJECT:** No target patterns found.")
 
-# --- MAIN EXECUTION ---
 if __name__ == "__main__":
     main()
