@@ -239,7 +239,7 @@ def main():
 
             for m in matches:
                 highlighted += current_text[last:m['start']]
-                highlighted += f"<mark style='background-color:#ffcb05; color:#2b1b40; font-weight:bold; padding:2px 4px; border-radius:4px; box-shadow: 0px 2px 4px rgba(0,0,0,0.2);'>{current_text[m['start']:m['end']+1]}</mark>"
+                highlighted += f"<mark style='background-color:#ffcb05; color:#000000; font-weight:bold; padding:2px 4px; border-radius:4px; box-shadow: 0px 2px 4px rgba(0,0,0,0.2);'>{current_text[m['start']:m['end']+1]}</mark>"
                 last = m['end'] + 1
 
             highlighted += current_text[last:]
