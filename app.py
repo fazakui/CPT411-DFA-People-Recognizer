@@ -142,7 +142,7 @@ def main():
                 st.markdown(pos_md)
 
             # VISUALIZATION
-            st.markdown("##### Output")
+            st.markdown("##### Highlighted Output")
             highlighted, last = "", 0
             for m in matches:
                 highlighted += current_text[last:m['start']]
